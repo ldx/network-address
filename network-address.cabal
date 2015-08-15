@@ -1,0 +1,31 @@
+name:                network-address
+version:             0.1.0.0
+synopsis:            Retrieve IPv4 and IPv6 network address configuration
+-- description:
+homepage:            https://github.com/ldx/network-address
+license:             MIT
+license-file:        LICENSE
+author:              Vilmos Nebehaj
+maintainer:          v.nebehaj@gmail.com
+-- copyright:
+category:            Network
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+extra-source-files:
+  ffi/network_info.h,
+  ffi/network_info.c,
+  README.md
+
+library
+  exposed-modules:    Network.Address
+  -- other-modules:
+  -- other-extensions:
+  build-depends:      base >=4.7 && <4.8
+  hs-source-dirs:     src
+  default-language:   Haskell98
+  include-dirs:       ffi
+  c-sources:          ffi/network_info.c
+  cc-options:         -Wall
+  extra-libraries:    nl

@@ -13,7 +13,6 @@ module Network.Address (
     NetworkInterfaceName (..),
 ) where
 
-import Control.Applicative
 import Control.Monad (forM)
 import Data.Bits (shiftR)
 import Data.List (intersperse, zipWith4)

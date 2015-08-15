@@ -13,10 +13,10 @@ module Network.Address (
 
 import Data.Bits (shiftR)
 import Data.List (intersperse)
-import Foreign (Word8, Word16, Word32, alignment, alloca, peek, peekByteOff,
-                sizeOf)
-import Foreign.Ptr (Ptr)
-import Foreign.C.String (CString, newCString)
+import Foreign (Word8, Word16, Word32, alignment, alloca, allocaBytes,
+                peek, peekByteOff, sizeOf)
+import Foreign.Ptr (nullPtr, Ptr)
+import Foreign.C.String (CString, newCString, peekCString)
 import Foreign.C.Types (CInt)
 import Foreign.Marshal.Array (peekArray)
 import Foreign.Storable (Storable)
@@ -27,6 +27,7 @@ import Numeric (showHex)
 ---------
 foreign import ccall unsafe "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
 foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
+foreign import ccall unsafe "ifindex2name" ifindex2name :: Word32 -> CString -> Word32 -> IO (CString)
 foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
@@ -89,6 +90,14 @@ data NetworkInfo = NetworkInfo
     , ipv4      :: [IPv4Address]
     , ipv6      :: [IPv6Address]
     }
+
+ifnamsiz = 16 -- In net/if.h
+
+ifindex2Name idx = allocaBytes ifnamsiz $ \ptr -> do
+    name <- ifindex2name idx ptr $ fromIntegral ifnamsiz
+    if name == nullPtr
+        then return ""
+        else peekCString name
 
 -----------------------------
 -- Retrieve IPv4 addresses --

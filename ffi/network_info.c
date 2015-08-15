@@ -140,6 +140,32 @@ struct network_info6 *get_if_addrs6(char *interface, int *n)
        return (struct network_info6 *)_get_if_addrs(interface, AF_INET6, n);
 }
 
+char *ifindex2name(uint32_t ifindex, char *name, uint32_t length)
+{
+       char *res = NULL;
+       struct nl_handle *sock = NULL;
+       struct nl_cache *link_cache = NULL;
+
+       sock = nl_handle_alloc();
+       if (!sock)
+              goto out;
+
+       if (nl_connect(sock, NETLINK_ROUTE) < 0)
+              goto out;
+
+       link_cache = rtnl_link_alloc_cache(sock);
+       if (!link_cache)
+              goto out;
+
+       res = rtnl_link_i2name(link_cache, ifindex, name, (size_t)length);
+
+out:
+       if (link_cache)
+              nl_cache_free(link_cache);
+       if (sock)
+              nl_handle_destroy(sock);
+       return res;
+}
 #ifdef TEST_MAIN
 
 #include <stddef.h>

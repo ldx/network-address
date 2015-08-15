@@ -165,6 +165,11 @@ int main(int argc, char **argv)
        struct network_info6 *ni6 = get_if_addrs6(argv[1], &n);
        if (!ni6)
               return 1;
+       for (i = 0; i < n; i++) {
+              struct network_info6 *tmp = ni6 + i;
+              inet_ntop(AF_INET6, (void *)&tmp->address, buf, sizeof(buf));
+              printf("%d -> %s/%d (%d)\n", tmp->ifindex, buf, tmp->prefixlen, tmp->family);
+       }
        free(ni6);
 
        return 0;

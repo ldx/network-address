@@ -11,7 +11,8 @@ module Network.Address (
 
 import Data.Bits (shiftR)
 import Data.List (intersperse)
-import Foreign (Int32, Word8, Word32, alignment, alloca, peek, peekByteOff, sizeOf)
+import Foreign (Int32, Word8, Word16, Word32,
+                alignment, alloca, peek, peekByteOff, sizeOf)
 import Foreign.Ptr (Ptr)
 import Foreign.C.String (CString, newCString)
 import Foreign.C.Types (CInt)

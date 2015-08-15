@@ -22,10 +22,18 @@ import Foreign.Marshal.Array (peekArray)
 import Foreign.Storable (Storable)
 import Numeric (showHex)
 
+---------
+-- FFI --
+---------
 foreign import ccall unsafe "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
 foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
 foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
+-----------------------
+-- IPv4 address type --
+-----------------------
 data IPv4Address = IPv4Address Word32
 
 instance Show IPv4Address where
@@ -40,6 +48,16 @@ octets q =
     ]
     where w = ntohl q
 
+data NetworkInfo4 = NetworkInfo4
+    { ipv4ifindex   :: Word32
+    , ipv4family    :: Word32
+    , ipv4prefixlen :: Word32
+    , ipv4address   :: IPv4Address
+    }
+
+-----------------------
+-- IPv6 address type --
+-----------------------
 data IPv6Address = IPv6Address Word32 Word32 Word32 Word32
 
 instance Show IPv6Address where
@@ -53,13 +71,6 @@ doubleoctets q =
     ]
     where w = ntohl q
 
-data NetworkInfo4 = NetworkInfo4
-    { ipv4ifindex   :: Word32
-    , ipv4family    :: Word32
-    , ipv4prefixlen :: Word32
-    , ipv4address   :: IPv4Address
-    }
-
 data NetworkInfo6 = NetworkInfo6
     { ipv6ifindex   :: Word32
     , ipv6family    :: Word32
@@ -67,6 +78,9 @@ data NetworkInfo6 = NetworkInfo6
     , ipv6address   :: IPv6Address
     }
 
+----------------------------
+-- Network interface list --
+----------------------------
 type NetworkInterface = String
 
 data NetworkInfo = NetworkInfo
@@ -76,7 +90,9 @@ data NetworkInfo = NetworkInfo
     , ipv6      :: [IPv6Address]
     }
 
-#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+-----------------------------
+-- Retrieve IPv4 addresses --
+-----------------------------
 
 instance Storable NetworkInfo4 where
     alignment _ = #alignment struct network_info4
@@ -104,6 +120,9 @@ getIPv4Address interface = do
 getAllIPv4Address :: IO [(IPv4Address, Word32)]
 getAllIPv4Address = getIPv4Address ""
 
+-----------------------------
+-- Retrieve IPv6 addresses --
+-----------------------------
 instance Storable NetworkInfo6 where
     alignment _ = #alignment struct network_info6
     sizeOf _    = #size struct network_info6

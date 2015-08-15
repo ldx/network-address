@@ -7,12 +7,16 @@ module Network.Address (
     getAllIPv4Address,
     getIPv6Address,
     getAllIPv6Address,
-    NetworkInfo (..),
+    getNetworkInterfaces,
     NetworkInterface (..),
+    NetworkInterfaceIndex (..),
+    NetworkInterfaceName (..),
 ) where
 
+import Control.Applicative
+import Control.Monad (forM)
 import Data.Bits (shiftR)
-import Data.List (intersperse)
+import Data.List (intersperse, zipWith4)
 import Foreign (Word8, Word16, Word32, alignment, alloca, allocaBytes,
                 peek, peekByteOff, sizeOf)
 import Foreign.Ptr (nullPtr, Ptr)
@@ -27,6 +31,7 @@ import Numeric (showHex)
 ---------
 foreign import ccall unsafe "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
 foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
+foreign import ccall unsafe "get_ifindexes" get_ifindexes :: Ptr CInt -> IO (Ptr NetworkInterfaceIndex)
 foreign import ccall unsafe "ifindex2name" ifindex2name :: Word32 -> CString -> Word32 -> IO (CString)
 foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
@@ -79,25 +84,43 @@ data NetworkInfo6 = NetworkInfo6
     , ipv6address   :: IPv6Address
     }
 
-----------------------------
--- Network interface list --
-----------------------------
-type NetworkInterface = String
+------------------------
+-- Network interfaces --
+------------------------
+type NetworkInterfaceIndex = Word32
 
-data NetworkInfo = NetworkInfo
-    { ifindex   :: Word32
-    , ifname    :: NetworkInterface
+type NetworkInterfaceName = String
+
+data NetworkInterface = NetworkInterface
+    { ifindex   :: NetworkInterfaceIndex
+    , ifname    :: NetworkInterfaceName
     , ipv4      :: [IPv4Address]
     , ipv6      :: [IPv6Address]
-    }
+    -- , mac       :: [MACAddress]
+    } deriving (Show)
 
 ifnamsiz = 16 -- In net/if.h
 
+ifindex2Name :: NetworkInterfaceIndex -> IO NetworkInterfaceName
 ifindex2Name idx = allocaBytes ifnamsiz $ \ptr -> do
     name <- ifindex2name idx ptr $ fromIntegral ifnamsiz
     if name == nullPtr
         then return ""
         else peekCString name
+
+getIfindexes :: IO [NetworkInterfaceIndex]
+getIfindexes = alloca $ \nptr -> do
+    ptr <- get_ifindexes nptr
+    n <- peek nptr
+    peekArray (fromIntegral n) ptr
+
+getNetworkInterfaces :: IO [NetworkInterface]
+getNetworkInterfaces = do
+    ifindexes   <- getIfindexes
+    ifnames     <- forM ifindexes ifindex2Name
+    ipv4s       <- forM ifnames (\name -> fmap (map fst) (getIPv4Address name))
+    ipv6s       <- forM ifnames (\name -> fmap (map fst) (getIPv6Address name))
+    return $ zipWith4 NetworkInterface ifindexes ifnames ipv4s ipv6s
 
 -----------------------------
 -- Retrieve IPv4 addresses --

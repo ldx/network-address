@@ -166,6 +166,59 @@ out:
               nl_handle_destroy(sock);
        return res;
 }
+
+struct network_interface_array {
+       int n;
+       uint32_t *ifindexes;
+};
+
+static void nl_link_cb(struct nl_object *obj, void *arg)
+{
+       struct network_interface_array *nia = arg;
+       struct rtnl_link *link = (struct rtnl_link *)obj;
+       int idx = rtnl_link_get_ifindex(link);
+
+       if (idx <= 0)
+              return;
+
+       nia->ifindexes = realloc(nia->ifindexes,
+                                (nia->n + 1) * sizeof(uint32_t));
+       if (!nia->ifindexes)
+              return;
+       *(nia->ifindexes + nia->n) = idx;
+       nia->n++;
+}
+
+uint32_t *get_ifindexes(uint32_t *n)
+{
+       struct nl_handle *sock = NULL;
+       struct nl_cache *link_cache = NULL;
+       struct network_interface_array nia = {
+              .n = 0,
+              .ifindexes = NULL,
+       };
+
+       sock = nl_handle_alloc();
+       if (!sock)
+              goto out;
+
+       if (nl_connect(sock, NETLINK_ROUTE) < 0)
+              goto out;
+
+       link_cache = rtnl_link_alloc_cache(sock);
+       if (!link_cache)
+              goto out;
+
+       nl_cache_foreach(link_cache, nl_link_cb, &nia);
+
+out:
+       if (link_cache)
+              nl_cache_free(link_cache);
+       if (sock)
+              nl_handle_destroy(sock);
+       *n = (uint32_t)nia.n;
+       return nia.ifindexes;
+}
 #ifdef TEST_MAIN
 
 #include <stddef.h>
@@ -197,6 +250,12 @@ int main(int argc, char **argv)
               printf("%d -> %s/%d (%d)\n", tmp->ifindex, buf, tmp->prefixlen, tmp->family);
        }
        free(ni6);
+
+       uint32_t m;
+       uint32_t *ifs = get_ifindexes(&m);
+       for (i = 0; i < m; i++)
+              printf("interface #%d -> %d\n", i, *(ifs + i));
+       free(ifs);
 
        return 0;
 }

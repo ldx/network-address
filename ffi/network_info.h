@@ -4,7 +4,7 @@ struct network_info4 {
        uint32_t ifindex;
        uint32_t family;
        uint32_t prefixlen;
-       uint8_t address[4];
+       uint32_t address;
        uint8_t pad[12];
 };
 
@@ -12,7 +12,7 @@ struct network_info6 {
        uint32_t ifindex;
        uint32_t family;
        uint32_t prefixlen;
-       uint8_t address[16];
+       uint32_t address[4];
 };
 
 struct network_info_storage {

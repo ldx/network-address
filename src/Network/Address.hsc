@@ -25,6 +25,18 @@ foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
 data IPv4Address = IPv4Address Word32
 
+instance Show IPv4Address where
+    show (IPv4Address addr) = concat . intersperse "." $ map show $ octets addr
+
+octets :: Word32 -> [Word8]
+octets q =
+    [ fromIntegral (w `shiftR` 24)
+    , fromIntegral (w `shiftR` 16)
+    , fromIntegral (w `shiftR` 8)
+    , fromIntegral w
+    ]
+    where w = ntohl q
+
 data IPv6Address = IPv6Address Word32 Word32 Word32 Word32
 
 data NetworkInfo4 = NetworkInfo4
@@ -49,18 +61,6 @@ data NetworkInfo = NetworkInfo
     , ipv4      :: [IPv4Address]
     -- , ipv6      :: [IPv6Address]
     }
-
-instance Show IPv4Address where
-    show (IPv4Address addr) = concat . intersperse "." $ map show $ octets addr
-
-octets :: Word32 -> [Word8]
-octets q =
-    [ fromIntegral (w `shiftR` 24)
-    , fromIntegral (w `shiftR` 16)
-    , fromIntegral (w `shiftR` 8)
-    , fromIntegral w
-    ]
-    where w = ntohl q
 
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 

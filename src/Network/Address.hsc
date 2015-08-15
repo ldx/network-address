@@ -5,6 +5,8 @@
 module Network.Address (
     getIPv4Addresses,
     getAllIPv4Address,
+    getIPv6Addresses,
+    getAllIPv6Address,
     NetworkInfo (..),
     NetworkInterface (..),
 ) where
@@ -18,9 +20,10 @@ import Foreign.C.String (CString, newCString)
 import Foreign.C.Types (CInt)
 import Foreign.Marshal.Array (peekArray)
 import Foreign.Storable (Storable)
+import Numeric (showHex)
 
 foreign import ccall unsafe "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
--- foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
+foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
 foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
 data IPv4Address = IPv4Address Word32
@@ -39,6 +42,17 @@ octets q =
 
 data IPv6Address = IPv6Address Word32 Word32 Word32 Word32
 
+instance Show IPv6Address where
+    show (IPv6Address a0 a1 a2 a3) = concat . intersperse ":" $
+        map (\x -> showHex x "") $ concat $ map doubleoctets [a0, a1, a2, a3]
+
+doubleoctets :: Word32 -> [Word16]
+doubleoctets q =
+    [ fromIntegral (w `shiftR` 16)
+    , fromIntegral w
+    ]
+    where w = ntohl q
+
 data NetworkInfo4 = NetworkInfo4
     { ipv4ifindex   :: Int32
     , ipv4family    :: Int32
@@ -46,12 +60,12 @@ data NetworkInfo4 = NetworkInfo4
     , ipv4address   :: IPv4Address
     }
 
--- data NetworkInfo6 = NetworkInfo6
---     { ipv6ifindex   :: Int32
---     , ipv6family    :: Int32
---     , ipv6prefixlen :: Int32
---     , ipv6address   :: IPv6Address
---     }
+data NetworkInfo6 = NetworkInfo6
+    { ipv6ifindex   :: Int32
+    , ipv6family    :: Int32
+    , ipv6prefixlen :: Int32
+    , ipv6address   :: IPv6Address
+    }
 
 type NetworkInterface = String
 
@@ -59,7 +73,7 @@ data NetworkInfo = NetworkInfo
     { ifindex   :: Int32
     , ifname    :: NetworkInterface
     , ipv4      :: [IPv4Address]
-    -- , ipv6      :: [IPv6Address]
+    , ipv6      :: [IPv6Address]
     }
 
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
@@ -89,3 +103,32 @@ getIPv4Addresses interface = do
 
 getAllIPv4Address :: IO [(IPv4Address, Int32)]
 getAllIPv4Address = getIPv4Addresses ""
+
+instance Storable NetworkInfo6 where
+    alignment _ = #alignment struct network_info6
+    sizeOf _    = #size struct network_info6
+    peek ptr    = do
+        ipv6ifindex     <- (#peek struct network_info6, ifindex) ptr
+        ipv6family      <- (#peek struct network_info6, family) ptr
+        ipv6prefixlen   <- (#peek struct network_info6, prefixlen) ptr
+        addr0           <- (#peek struct network_info6, address[0]) ptr
+        addr1           <- (#peek struct network_info6, address[1]) ptr
+        addr2           <- (#peek struct network_info6, address[2]) ptr
+        addr3           <- (#peek struct network_info6, address[3]) ptr
+        let ipv6address = IPv6Address addr0 addr1 addr2 addr3
+        return $ NetworkInfo6 ipv6ifindex ipv6family ipv6prefixlen ipv6address
+
+getIPv6Info :: String -> IO [NetworkInfo6]
+getIPv6Info interface = alloca $ \nptr -> do
+    ifname <- newCString interface
+    ptr <- get_if_addrs6 ifname nptr
+    n <- peek nptr
+    peekArray (fromIntegral n) ptr
+
+getIPv6Addresses :: String -> IO [(IPv6Address, Int32)]
+getIPv6Addresses interface = do
+    info <- getIPv6Info interface
+    return $ map (\x -> (ipv6address x, ipv6prefixlen x)) info
+
+getAllIPv6Address :: IO [(IPv6Address, Int32)]
+getAllIPv6Address = getIPv6Addresses ""

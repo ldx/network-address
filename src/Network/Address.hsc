@@ -3,9 +3,9 @@
 #include "network_info.h"
 
 module Network.Address (
-    getIPv4Addresses,
+    getIPv4Address,
     getAllIPv4Address,
-    getIPv6Addresses,
+    getIPv6Address,
     getAllIPv6Address,
     NetworkInfo (..),
     NetworkInterface (..),
@@ -96,8 +96,8 @@ getIPv4Info interface = alloca $ \nptr -> do
     n <- peek nptr
     peekArray (fromIntegral n) ptr
 
-getIPv4Addresses :: String -> IO [(IPv4Address, Int32)]
-getIPv4Addresses interface = do
+getIPv4Address :: String -> IO [(IPv4Address, Int32)]
+getIPv4Address interface = do
     info <- getIPv4Info interface
     return $ map (\x -> (ipv4address x, ipv4prefixlen x)) info
 
@@ -125,8 +125,8 @@ getIPv6Info interface = alloca $ \nptr -> do
     n <- peek nptr
     peekArray (fromIntegral n) ptr
 
-getIPv6Addresses :: String -> IO [(IPv6Address, Int32)]
-getIPv6Addresses interface = do
+getIPv6Address :: String -> IO [(IPv6Address, Int32)]
+getIPv6Address interface = do
     info <- getIPv6Info interface
     return $ map (\x -> (ipv6address x, ipv6prefixlen x)) info
 

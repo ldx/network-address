@@ -18,9 +18,9 @@ import Foreign.C.Types (CInt)
 import Foreign.Marshal.Array (peekArray)
 import Foreign.Storable (Storable)
 
-foreign import ccall "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
--- foreign import ccall "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
-foreign import ccall "ntohl" ntohl :: Word32 -> Word32
+foreign import ccall unsafe "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
+-- foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
+foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
 data IPv4Address = IPv4Address Word32
 

@@ -58,7 +58,7 @@ data NetworkInfo4 = NetworkInfo4
     , ipv4family    :: Word32
     , ipv4prefixlen :: Word32
     , ipv4address   :: IPv4Address
-    }
+    } deriving (Show)
 
 -----------------------
 -- IPv6 address type --
@@ -81,7 +81,7 @@ data NetworkInfo6 = NetworkInfo6
     , ipv6family    :: Word32
     , ipv6prefixlen :: Word32
     , ipv6address   :: IPv6Address
-    }
+    } deriving (Show)
 
 ------------------------
 -- Network interfaces --

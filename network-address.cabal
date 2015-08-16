@@ -8,10 +8,8 @@ license:             MIT
 license-file:        LICENSE
 author:              Vilmos Nebehaj
 maintainer:          v.nebehaj@gmail.com
--- copyright:
 category:            Network
 build-type:          Simple
--- extra-source-files:
 cabal-version:       >=1.10
 
 extra-source-files:
@@ -25,8 +23,6 @@ source-repository head
 
 library
   exposed-modules:    Network.Address
-  -- other-modules:
-  -- other-extensions:
   build-depends:      base >=4.7 && <4.8
   hs-source-dirs:     src
   default-language:   Haskell98

@@ -1,7 +1,8 @@
 name:                network-address
 version:             0.1.0.0
 synopsis:            Retrieve IPv4 and IPv6 network address configuration
--- description:
+description:         Retrieve network interface information on Linux via
+                     libnl.
 homepage:            https://github.com/ldx/network-address
 license:             MIT
 license-file:        LICENSE

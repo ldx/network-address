@@ -116,9 +116,9 @@ getIfindexes = alloca $ \nptr -> do
 getNetworkInterfaces :: IO [NetworkInterface]
 getNetworkInterfaces = do
     ifindexes   <- getIfindexes
-    ifnames     <- forM ifindexes ifindex2Name
-    ipv4s       <- forM ifnames (\name -> fmap (map fst) (getIPv4Address name))
-    ipv6s       <- forM ifnames (\name -> fmap (map fst) (getIPv6Address name))
+    ifnames     <- mapM ifindex2Name ifindexes
+    ipv4s       <- mapM (\name -> fmap (map fst) $ getIPv4Address name) ifnames
+    ipv6s       <- mapM (\name -> fmap (map fst) $ getIPv6Address name) ifnames
     return $ zipWith4 NetworkInterface ifindexes ifnames ipv4s ipv6s
 
 -----------------------------

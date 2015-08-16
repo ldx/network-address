@@ -13,7 +13,7 @@ module Network.Address (
     NetworkInterfaceName (..),
 ) where
 
-import Control.Monad (forM)
+import Control.Monad (mapM)
 import Data.Bits (shiftR)
 import Data.List (intersperse, zipWith4)
 import Foreign (Word8, Word16, Word32, alignment, alloca, allocaBytes,

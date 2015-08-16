@@ -48,6 +48,9 @@ data IPv4Address = IPv4Address Word32
 instance Show IPv4Address where
     show (IPv4Address addr) = concat . intersperse "." $ map show $ octets addr
 
+instance Eq IPv4Address where
+    (==) (IPv4Address a) (IPv4Address b) = a == b
+
 octets :: Word32 -> [Word8]
 octets q =
     [ fromIntegral (w `shiftR` 24)
@@ -72,6 +75,10 @@ data IPv6Address = IPv6Address Word32 Word32 Word32 Word32
 instance Show IPv6Address where
     show (IPv6Address a0 a1 a2 a3) = concat . intersperse ":" $
         map (\x -> showHex x "") $ concat $ map doubleoctets [a0, a1, a2, a3]
+
+instance Eq IPv6Address where
+    (==) (IPv6Address a0 a1 a2 a3) (IPv6Address b0 b1 b2 b3) =
+        a0 == b0 && a1 == b1 && a2 == b2 && a3 == b3
 
 doubleoctets :: Word32 -> [Word16]
 doubleoctets q =

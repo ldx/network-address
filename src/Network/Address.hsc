@@ -117,8 +117,8 @@ getNetworkInterfaces :: IO [NetworkInterface]
 getNetworkInterfaces = do
     ifindexes   <- getIfindexes
     ifnames     <- mapM ifindex2Name ifindexes
-    ipv4s       <- mapM (\name -> fmap (map fst) $ getIPv4Address name) ifnames
-    ipv6s       <- mapM (\name -> fmap (map fst) $ getIPv6Address name) ifnames
+    ipv4s       <- mapM (fmap (map fst) . getIPv4Address) ifnames
+    ipv6s       <- mapM (fmap (map fst) . getIPv6Address) ifnames
     return $ zipWith4 NetworkInterface ifindexes ifnames ipv4s ipv6s
 
 -----------------------------

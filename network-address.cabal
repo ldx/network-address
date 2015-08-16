@@ -19,6 +19,10 @@ extra-source-files:
   ffi/network_info.c,
   README.md
 
+source-repository head
+  type:     git
+  location: git://github.com:ldx/network-address.git
+
 library
   exposed-modules:    Network.Address
   -- other-modules:

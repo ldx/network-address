@@ -29,8 +29,11 @@ import Numeric (showHex)
 -- FFI --
 ---------
 foreign import ccall unsafe "get_if_addrs4" get_if_addrs4 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo4)
+foreign import ccall unsafe "free" if_addrs4_free :: Ptr NetworkInfo4 -> IO ()
 foreign import ccall unsafe "get_if_addrs6" get_if_addrs6 :: CString -> Ptr CInt -> IO (Ptr NetworkInfo6)
+foreign import ccall unsafe "free" if_addrs6_free :: Ptr NetworkInfo6 -> IO ()
 foreign import ccall unsafe "get_ifindexes" get_ifindexes :: Ptr CInt -> IO (Ptr NetworkInterfaceIndex)
+foreign import ccall unsafe "free" ifindexes_free :: Ptr NetworkInterfaceIndex -> IO ()
 foreign import ccall unsafe "ifindex2name" ifindex2name :: Word32 -> CString -> Word32 -> IO (CString)
 foreign import ccall unsafe "ntohl" ntohl :: Word32 -> Word32
 
@@ -111,7 +114,9 @@ getIfindexes :: IO [NetworkInterfaceIndex]
 getIfindexes = alloca $ \nptr -> do
     ptr <- get_ifindexes nptr
     n <- peek nptr
-    peekArray (fromIntegral n) ptr
+    ifindexes <- peekArray (fromIntegral n) ptr
+    ifindexes_free ptr
+    return ifindexes
 
 getNetworkInterfaces :: IO [NetworkInterface]
 getNetworkInterfaces = do
@@ -141,7 +146,9 @@ getIPv4Info interface = alloca $ \nptr -> do
     ifname <- newCString interface
     ptr <- get_if_addrs4 ifname nptr
     n <- peek nptr
-    peekArray (fromIntegral n) ptr
+    info <- peekArray (fromIntegral n) ptr
+    if_addrs4_free ptr
+    return info
 
 getIPv4Address :: String -> IO [(IPv4Address, Word32)]
 getIPv4Address interface = do
@@ -173,7 +180,9 @@ getIPv6Info interface = alloca $ \nptr -> do
     ifname <- newCString interface
     ptr <- get_if_addrs6 ifname nptr
     n <- peek nptr
-    peekArray (fromIntegral n) ptr
+    info <- peekArray (fromIntegral n) ptr
+    if_addrs6_free ptr
+    return info
 
 getIPv6Address :: String -> IO [(IPv6Address, Word32)]
 getIPv6Address interface = do

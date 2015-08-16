@@ -7,6 +7,7 @@ module Network.Address (
     getAllIPv4Address,
     getIPv6Address,
     getAllIPv6Address,
+    getIfindexes,
     getNetworkInterfaces,
     NetworkInterface (..),
     NetworkInterfaceIndex (..),
